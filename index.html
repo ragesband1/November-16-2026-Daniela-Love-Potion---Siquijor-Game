@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daniela Love Potion - Siquijor Game</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+  body{background:#0a0a1a;color:#fff;padding:14px}
+  .wrap{max-width:900px;margin:auto}
+  .header{text-align:center;background:linear-gradient(135deg,#ff00a8,#7a00ff,#00ffcc);padding:18px;border-radius:18px;color:#fff}
+  .header h1{font-size:28px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+  .card{flex:1;min-width:120px;background:#161d3a;border:1px solid #333;border-radius:14px;padding:12px;text-align:center}
+  .card b{font-size:22px;color:#ffe600}
+  .timer{font-size:30px;font-weight:900;color:#ff3b6b}
+  button{padding:11px 14px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;margin:4px}
+  .btn{background:#ffe600}.btn2{background:#00ff88}.btn3{background:#ff3b6b;color:#fff}.btn4{background:#7a5cff;color:#fff}.btn5{background:#00ccff}
+  .bottleBox{text-align:center;background:#121833;border-radius:16px;padding:18px;margin:12px 0;border:2px solid #ff00a8}
+  .bottle{font-size:90px;transition:.3s}
+  .bottle.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+  .ingGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+  .ing{background:#222;border:2px solid #444;border-radius:12px;padding:12px;text-align:center;cursor:pointer;transition:.2s}
+  .ing:hover{transform:scale(1.05);border-color:#ffe600;box-shadow:0 0 12px #ffe600}
+  .ing.correct{border-color:#00ff88;background:#003311}
+  .ing.wrong{border-color:#ff3b6b;background:#330000}
+  .ing.used{opacity:.4;pointer-events:none}
+  .progress{height:12px;background:#222;border-radius:10px;overflow:hidden;margin:8px 0}
+  .fill{height:100%;background:linear-gradient(90deg,#ff00a8,#ffe600);width:0%;transition:width .3s}
+  .charBox{background:#1e2a4a;border-radius:14px;padding:14px;text-align:center;margin:12px 0}
+  .log{background:#000;padding:12px;border-radius:12px;min-height:60px;font-size:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>🧪 DANIELA LOVE POTION - SIQUIJOR GAME 🧪</h1>
+    <p>Fictional 2D Game - Level 1-100 - Polyamory With Consent Only</p>
+    <p style="font-size:12px;opacity:.8">Lahat ng names ay random fictional characters - hindi totoong tao</p>
+    <button class="btn2" onclick="speak('Welcome to Daniela Love Potion Siquijor Game! Level 1 to 100! Goodluck!')">🔊 PLAY INTRO VOICE</button>
+  </div>
+
+  <div class="stats">
+    <div class="card">⏰ TIME<br><div class="timer" id="timer">15</div><span>seconds per level</span></div>
+    <div class="card">🏆 LEVEL<br><b id="level">1 / 100</b></div>
+    <div class="card">❤️ LIVES<br><b id="lives" style="color:#ff3b6b">3</b></div>
+    <div class="card">⭐ POINTS<br><b id="points">0</b></div>
+    <div class="card">💘 RELATIONSHIPS<br><b id="partners" style="color:#ff00a8">0</b></div>
+  </div>
+  <div class="progress"><div class="fill" id="fill"></div></div>
+
+  <div style="text-align:center">
+    <button class="btn" onclick="startGame()">▶ START GAME</button>
+    <button class="btn2" onclick="nextLevel(true)">⏭ SKIP LEVEL</button>
+    <button class="btn3" onclick="location.reload()">↺ RESET</button>
+  </div>
+
+  <div class="charBox" id="charBox">
+    <h2 id="charName">Press START to meet your first single...</h2>
+    <p id="charDesc" style="opacity:.8">Fictional character - Random name every level, hindi na uulit yung past names</p>
+    <p id="consentText" style="font-weight:bold;margin:8px 0"></p>
+    <div id="consentBtns" style="display:none">
+      <button class="btn2" onclick="giveConsent(true)">✅ YES - I Consent</button>
+      <button class="btn3" onclick="giveConsent(false)">❌ NO - Respect My Choice</button>
+    </div>
+  </div>
+
+  <div class="bottleBox">
+    <div class="bottle" id="bottle">🧪</div>
+    <h3>Daniela Potion Bottle - Level <span id="bottleLevel">1</span></h3>
+    <p>Gawin mo yung tamang formula! Click ingredients in correct order!</p>
+    <p>Target Formula: <b id="targetFormula" style="color:#ffe600">???</b></p>
+    <p>Your Mix: <b id="yourMix">Empty</b></p>
+    <p id="brewMsg"></p>
+    <button class="btn4" onclick="shakeBottle()">� shaking Bottle - 3x Shake</button>
+    <button class="btn5" onclick="sprayPotion()">💨 Spray Once - Neck & Wrist (In Game Only)</button>
+  </div>
+
+  <h3>🧪 Ingredients - Click in order, mabilisan!</h3>
+  <div class="ingGrid" id="ingGrid"></div>
+
+  <div class="log" id="log">Game Log: Press START... Goodluck!</div>
+
+  <div id="finalBox" style="display:none;background:#121833;padding:20px;border-radius:16px;text-align:center;margin-top:12px"></div>
+</div>
+
+<script>
+// ============ FICTIONAL DATA - NO REAL PEOPLE ============
+const FIRST_NAMES = ["Aria","Luna","Maya","Sofia","Chloe","Zoe","Nina","Ella","Isla","Ruby","Mia","Lily","Ava","Grace","Ivy","Rosa","Dana","Kira","Tara","Jade","Nova","Skye","Pearl","Faith","Hope","Joy","Star","Rain","Summer","Autumn","Winter","Spring","Clover","Willow","Hazel","Olive","Violet","Scarlet","Amber","Jasmine","Lilith","Selene","Aurora","Celeste","Freya","Ingrid","Marta","Lena","Nadia","Priya","Aisha","Yuki","Hana","Sakura","Mei","Lin","Ana","Maria","Carmen","Lucia","Elena","Bianca","Carla","Diana","Elsa","Fiona","Giselle","Hannah","Iris","Julia","Karen","Laura","Mona","Nora","Olga","Paula","Queen","Rita","Sara","Tina","Uma","Vera","Wendy","Xena","Yara","Zara","Bella","Cindy","Daisy","Emma","Faye","Gwen","Holly"];
+const LAST_NAMES = ["Santos","Reyes","Cruz","Garcia","Lopez","Torres","Flores","Ramos","Diaz","Mendoza","Villanueva","Aquino","Castillo","Del Rosario","Fernandez","Gonzales","Herrera","Jimenez","Luna","Morales","Navarro","Ortiz","Perez","Quinto","Rivera","Salazar","Tan","Uy","Vega","Zamora","Abad","Bautista","Corpuz","Domingo","Estrada","Fuentes","Gomez","Hilario","Ibarra","Javier","Kang","Lim","Manalo","Natividad","Ocampo","Padilla","Quezon","Rosales","Sison","Tiu","Valdez","Wong","Yap","Zuniga"];
+
+const INGREDIENTS = [
+  {name:"🌸 Moon Petal", id:"moon"},
+  {name:"✨ Star Dust", id:"star"},
+  {name:"🍯 Honey Drop", id:"honey"},
+  {name:"🌹 Rose Essence", id:"rose"},
+  {name:"💧 Crystal Water", id:"water"},
+  {name:"🍓 Berry Glow", id:"berry"},
+  {name:"🌿 Mint Leaf", id:"mint"},
+  {name:"💜 Lavender Mist", id:"lavender"},
+  {name:"🍋 Lemon Spark", id:"lemon"},
+  {name:"🦋 Butterfly Wing", id:"butterfly"},
+  {name:"🌙 Night Dew", id:"dew"},
+  {name:"🔮 Magic Sparkle", id:"magic"}
+];
+
+let level=1, lives=3, points=0, partners=0;
+let usedNames=new Set();
+let currentChar=null;
+let targetRecipe=[];
+let currentMix=[];
+let timeLeft=15;
+let timerInt=null;
+let hasConsent=false;
+let shakeCount=0;
+
+function speak(text, rate=1){
+  try{ speechSynthesis.cancel(); let u=new SpeechSynthesisUtterance(text); u.rate=rate; speechSynthesis.speak(u); }catch(e){}
+}
+function playSound(type){
+  try{
+    let ctx=new (window.AudioContext||window.webkitAudioContext)();
+    let osc=ctx.createOscillator(); let gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    if(type==='correct'){ osc.frequency.value=880; osc.type='sine'; }
+    if(type==='wrong'){ osc.frequency.value=200; osc.type='sawtooth'; }
+    if(type==='levelup'){ osc.frequency.value=1200; osc.type='triangle'; }
+    if(type==='shake'){ osc.frequency.value=400; osc.type='square'; }
+    if(type==='spray'){ osc.frequency.value=1500; osc.type='sine'; }
+    if(type==='gameover'){ osc.frequency.value=100; osc.type='sawtooth'; }
+    gain.gain.value=0.15; osc.start(); osc.stop(ctx.currentTime+0.3);
+  }catch(e){}
+}
+function getRandomName(){
+  let tries=0;
+  while(tries<200){
+    let f=FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)];
+    let l=LAST_NAMES[Math.floor(Math.random()*LAST_NAMES.length)];
+    let full=f+" "+l;
+    if(!usedNames.has(full)){ usedNames.add(full); return full; }
+    tries++;
+  }
+  return "Mystery Single "+level;
+}
+function getRecipeForLevel(lv){
+  let count = lv<=25?3 : lv<=50?4 : lv<=75?5 : 6;
+  let shuffled=[...INGREDIENTS].sort(()=>Math.random()-0.5);
+  return shuffled.slice(0,count);
+}
+function updateHUD(){
+  document.getElementById('level').textContent=level+" / 100";
+  document.getElementById('lives').textContent=lives;
+  document.getElementById('points').textContent=points;
+  document.getElementById('partners').textContent=partners;
+  document.getElementById('bottleLevel').textContent=level;
+  document.getElementById('fill').style.width=(level/100*100)+"%";
+}
+function log(msg){ document.getElementById('log').innerHTML="Game Log: "+msg; }
+function startGame(){
+  level=1; lives=3; points=0; partners=0; usedNames.clear();
+  updateHUD(); speak("Game started! Level 1! Meet your first single!"); playSound('levelup');
+  setupLevel();
+}
+function setupLevel(){
+  if(level>100){ winGame(); return; }
+  if(lives<=0){ gameOver(); return; }
+  currentChar=getRandomName();
+  targetRecipe=getRecipeForLevel(level);
+  currentMix=[]; hasConsent=false; shakeCount=0;
+  document.getElementById('charName').textContent="💘 Level "+level+" - Meet: "+currentChar;
+  document.getElementById('charDesc').textContent="Single • Fictional character • Gusto mo ba siya makilala muna? Kausapin mo muna, alamin kung may consent siya.";
+  document.getElementById('consentText').textContent="❓ "+currentChar+": Gusto mo ba makipag-usap at sumali sa polyamory with consent? Piliin mo sagot mo.";
+  document.getElementById('consentBtns').style.display='block';
+  document.getElementById('targetFormula').textContent="??? - Kausapin mo muna para malaman formula!";
+  document.getElementById('yourMix').textContent="Empty";
+  document.getElementById('brewMsg').textContent="";
+  document.getElementById('bottle').textContent="🧪";
+  renderIngredients(true);
+  startTimer();
+  log("Level "+level+" - New single: "+currentChar+" - New name, hindi past name! Kausapin mo muna for consent!");
+}
+function renderIngredients(locked){
+  let grid=document.getElementById('ingGrid'); grid.innerHTML="";
+  let shuffled=[...INGREDIENTS].sort(()=>Math.random()-0.5);
+  shuffled.forEach(ing=>{
+    let d=document.createElement('div'); d.className='ing'+(locked?' used':''); d.textContent=ing.name;
+    d.onclick=()=>{ if(locked){ speak("Kausapin mo muna for consent!"); return; } pickIngredient(ing, d); };
+    grid.appendChild(d);
+  });
+}
+function giveConsent(yes){
+  document.getElementById('consentBtns').style.display='none';
+  if(yes){
+    hasConsent=true;
+    document.getElementById('consentText').textContent="✅ "+currentChar+": YES, I consent! Pwede mo ako ligawan at gawan ng potion - pero with respeto at honesty!";
+    document.getElementById('targetFormula').textContent=targetRecipe.map(r=>r.name).join(" → ");
+    renderIngredients(false);
+    speak("Yes! "+currentChar+" says yes I consent! Now brew the potion! Formula is "+targetRecipe.map(r=>r.name).join(", "));
+    playSound('correct');
+    log("Consent YES from "+currentChar+"! Formula revealed! Bilisan mo, "+timeLeft+" seconds left!");
+  } else {
+    hasConsent=false;
+    document.getElementById('consentText').textContent="❌ "+currentChar+": NO, I respectfully decline. Respect my choice!";
+    speak("No! Respect my choice! Moving to next single!");
+    playSound('wrong');
+    log(currentChar+" said NO. Respect! Moving to next single - hindi mo siya pwedeng pilitin!");
+    setTimeout(()=>{ level++; updateHUD(); setupLevel(); }, 1800);
+  }
+}
+function pickIngredient(ing, el){
+  if(!hasConsent) return;
+  if(currentMix.length>=targetRecipe.length) return;
+  let expected=targetRecipe[currentMix.length];
+  if(ing.id===expected.id){
+    currentMix.push(ing);
+    el.classList.add('correct'); el.classList.add('used');
+    document.getElementById('yourMix').textContent=currentMix.map(c=>c.name).join(" → ");
+    playSound('correct'); speak(ing.name+" correct!");
+    log("Correct! "+ing.name+" - "+currentMix.length+" / "+targetRecipe.length);
+    if(currentMix.length===targetRecipe.length){
+      brewSuccess();
+    }
+  } else {
+    el.classList.add('wrong');
+    lives--; updateHUD(); playSound('wrong'); speak("Wrong ingredient! Minus 1 life!");
+    log("❌ MALI! Dapat "+expected.name+" pero nilagay mo "+ing.name+" -1 Life! Lives: "+lives);
+    document.getElementById('brewMsg').textContent="❌ Mali! -1 Life! Ulitin mo, next level new name!";
+    if(lives<=0){ gameOver(); return; }
+    setTimeout(()=>{ level++; updateHUD(); setupLevel(); }, 1500);
+  }
+}
+function brewSuccess(){
+  clearInterval(timerInt);
+  points+=level<=25?100:level<=50?200:level<=75?300:500;
+  partners++;
+  document.getElementById('bottle').textContent="💖🧪💖";
+  document.getElementById('brewMsg').textContent="✅ PERFECT BREW! +"+points+" points! "+currentChar+" is now your partner with consent!";
+  playSound('levelup'); speak("Perfect brew! Level complete! "+currentChar+" is now your partner with consent!");
+  log("✅ Level "+level+" COMPLETE! "+currentChar+" - New partner with consent! Points: "+points);
+  updateHUD();
+  setTimeout(()=>{ level++; updateHUD(); setupLevel(); }, 2000);
+}
+function shakeBottle(){
+  if(!hasConsent){ speak("Need consent muna!"); return; }
+  shakeCount++;
+  let b=document.getElementById('bottle'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  playSound('shake'); speak("Shake "+shakeCount);
+  log("Shake "+shakeCount+" / 3 - Shake 3 beses lang sa game!");
+  if(shakeCount===3){ log("✅ 3x Shake Complete! Ready to spray once!"); speak("3 times shake complete!"); }
+}
+function sprayPotion(){
+  if(!hasConsent){ speak("Need consent muna!"); return; }
+  if(currentMix.length!==targetRecipe.length){ speak("Buuin mo muna formula!"); log("Buuin mo muna formula bago spray!"); return; }
+  playSound('spray'); speak("Spray once! In game only!");
+  log("💨 Spray Once - In game only! Potion applied with consent!");
+}
+function startTimer(){
+  clearInterval(timerInt);
+  timeLeft = level<=25?15 : level<=50?12 : level<=75?10 : 8;
+  document.getElementById('timer').textContent=timeLeft;
+  timerInt=setInterval(()=>{
+    timeLeft--; document.getElementById('timer').textContent=timeLeft;
+    if(timeLeft<=0){
+      clearInterval(timerInt);
+      lives--; updateHUD(); playSound('wrong'); speak("Time up! Late! Minus 1 life!");
+      log("⏰ TIME UP! Late ka! -1 Life! Lives: "+lives+" - Next level new name!");
+      if(lives<=0){ gameOver(); return; }
+      level++; updateHUD(); setupLevel();
+    }
+  },1000);
+}
+function nextLevel(skip){
+  clearInterval(timerInt);
+  level++; updateHUD(); setupLevel();
+}
+function gameOver(){
+  clearInterval(timerInt); playSound('gameover'); speak("Game over! Try again!");
+  let box=document.getElementById('finalBox'); box.style.display='block';
+  box.innerHTML=`<h2>💔 GAME OVER</h2><p>Level: ${level} / 100<br>Points: ${points}<br>Partners with consent: ${partners}</p><button class="btn" onclick="startGame()">Try Again</button>`;
+}
+function winGame(){
+  clearInterval(timerInt); playSound('levelup'); speak("Congratulations! You completed 100 levels! Daniela Love Potion Master!");
+  let box=document.getElementById('finalBox'); box.style.display='block';
+  box.innerHTML=`<h2>🎉 CONGRATULATIONS! 🎉</h2><p>Natapos mo Level 1-100!<br>Points: ${points}<br>Partners with consent: ${partners} / 100<br><br>Ikaw na ang Daniela Love Potion Master sa Siquijor Game!</p><p style="font-size:12px">Fictional game only - Sa totoong buhay, consent + respeto + honest communication ang tunay na love potion.</p><button class="btn" onclick="startGame()">Play Again</button>`;
+}
+updateHUD();
+</script>
+</body>
+</html>
